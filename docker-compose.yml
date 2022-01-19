@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  app:
+    container_name: epiconnect-app
+    image: epiconnect-app:dev
+    build:
+        context: ./app
+    volumes:
+      -  ./app:/home/node/app
+    restart: always
+    ports:
+      - 19000:19000
+      - 19001:19001
+      - 19002:19002
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=
+    networks:
+      - epiconnect
+  api:
+    container_name: epiconnect-api
+    image: epiconnect-api:dev
+    build:
+        context: ./api
+    volumes:
+      -  ./api:/home/node/app
+    restart: always
+    ports:
+      - 8080:8080
+      - 4242:4242
+    networks:
+      - epiconnect
+networks:
+  epiconnect:
+    driver: bridge
