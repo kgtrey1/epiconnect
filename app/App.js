@@ -1,11 +1,10 @@
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { name as appName } from './app.json';
 import { AppRegistry, TouchableOpacity } from 'react-native';
 import React from 'react';
 import AiBoard from './AiBoard';
 import { Modal, Portal, TextTest, Button, Provider } from 'react-native-paper';
-
+import {SocketContext, socket} from './Socket'
 
 function App() {
   const [visible, setVisible] = React.useState(false)
@@ -24,7 +23,7 @@ function App() {
   }
 
   return (
-    
+    <SocketContext.Provider value={socket}>
       <Provider>
         <Portal>
           <Modal visible={visible} dismissable={true} onDismiss={hideModal} contentContainerStyle={containerStyle}>
@@ -35,6 +34,7 @@ function App() {
           <AiBoard onWin={handleWin}/>
         </View>
       </Provider>
+    </SocketContext.Provider>
   )
 }
 
@@ -46,7 +46,7 @@ export default function Main() {
   );
 }
 
-AppRegistry.registerComponent(appName, () => Main);
+AppRegistry.registerComponent('epi', () => Main);
 
 
 

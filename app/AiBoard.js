@@ -1,16 +1,16 @@
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
-const io = require("socket.io-client");
+import React from 'react';
+import { SocketContext } from './Socket';
 
-const socket = io("ws://192.168.1.3:4242")
 const EMPTY = 0
 const PLAYER = 1
 const AI = 2
 
 function AiBoard(props) {
-    const [init, setInit] = useState(false)
-    const [turn, setTurn] = useState(PLAYER)
-    const [board, setBoard] = useState([
+    const socket = React.useContext(SocketContext)
+    const [init, setInit] = React.useState(false)
+    const [turn, setTurn] = React.useState(PLAYER)
+    const [board, setBoard] = React.useState([
         [0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0],
@@ -18,30 +18,33 @@ function AiBoard(props) {
         [0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0]
     ])
-    
-    if (init === false) {
-        socket.emit('start')
 
-        socket.on('win', (player) => {
-          let temporaryBoard =  [... board]
-    
-          for (let i = 0; i <= temporaryBoard.length - 1; i++) {
-            for (let j = 0; j <= temporaryBoard[i].length - 1; j++)
-              temporaryBoard[i][j] = 0
-          }
-          setBoard(temporaryBoard)
-          setTurn(PLAYER)
-          props.onWin(player)
-          socket.emit('start')
-        })
+
+    React.useEffect(() => {
+        if (init === false) {
+            socket.emit('start')
+
+            socket.on('win', (player) => {
+              let temporaryBoard =  [... board]
         
-        socket.on('move', (position) => {
-            setNewPawn(position, AI)
-            setTurn(PLAYER)
-        })
-    
-        setInit(true)
-    }
+              for (let i = 0; i <= temporaryBoard.length - 1; i++) {
+                for (let j = 0; j <= temporaryBoard[i].length - 1; j++)
+                  temporaryBoard[i][j] = 0
+              }
+              setBoard(temporaryBoard)
+              setTurn(PLAYER)
+              props.onWin(player)
+              socket.emit('start')
+            })
+            
+            socket.on('move', (position) => {
+                setNewPawn(position, AI)
+                setTurn(PLAYER)
+            })
+        
+            setInit(true)
+        }
+    });
 
     const playerMove = (column) => {
         if (turn === PLAYER) {
@@ -63,20 +66,41 @@ function AiBoard(props) {
                 return;
             }
         }
-        return; //fix the full column
+        return;
     }
 
-    const getRow = () => {
+    const renderRow = () => {
         return (Object.keys(board).map((i) => {
             let row = Object.keys(board[i]).map((j) => {
                 if (board[i][j] === EMPTY)
-                    return (<TouchableOpacity key={i+'-'+j} style={styles.emptyPawn} onPress={() => { playerMove(j) }}/>)
+                    return (
+                        <TouchableOpacity
+                            key={i+'-'+j}
+                            style={styles.emptyPawn}
+                            onPress={() => { playerMove(j) }}
+                        />
+                    )
                 else if (board[i][j] === 1)
-                    return (<TouchableOpacity key={i+'-'+j} style={styles.redPawn} onPress={() => { playerMove(j) }}/>)
-                return (<TouchableOpacity key={i+'-'+j} style={styles.yellowPawn} onPress={() => { playerMove(j) }}/>)
+                    return (
+                        <TouchableOpacity
+                            key={i+'-'+j}
+                            style={styles.redPawn}
+                            onPress={() => { playerMove(j) }}
+                        />
+                    )
+                return (
+                    <TouchableOpacity
+                        key={i+'-'+j}
+                        style={styles.yellowPawn}
+                        onPress={() => { playerMove(j) }}
+                    />
+                )
             })
             return (
-                <View key={i} style={{ backgroundColor: '#202a7d', flex: 1, flexDirection: 'row'}}>
+                <View
+                    key={i}
+                    style={styles.boardCell}
+                >
                     {row}
                 </View>
             )
@@ -84,8 +108,10 @@ function AiBoard(props) {
     }
     
     return (
-        <View style={{borderColor: 'black', borderWidth: 1, height: '34%', width: '80%'}}>
-            {getRow()}
+        <View
+            style={styles.board}
+        >
+            {renderRow()}
         </View>
     )
 }
@@ -113,6 +139,17 @@ const styles = StyleSheet.create({
         borderColor: 'black',
         borderWidth: 1,
         borderRadius: 100
+    },
+    board: {
+        borderColor: 'black',
+        borderWidth: 1,
+        height: '34%',
+        width: '80%'
+    },
+    boardCell: {
+        backgroundColor: '#202a7d',
+        flex: 1,
+        flexDirection: 'row'
     }
 })
 

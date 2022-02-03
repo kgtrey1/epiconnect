@@ -8,4 +8,4 @@ USER node
 
 WORKDIR /home/node/app
 
-CMD npm install && expo web
+CMD yarn install && yarn start
